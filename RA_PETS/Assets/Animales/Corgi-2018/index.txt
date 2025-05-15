@@ -1,0 +1,19 @@
+﻿Name: Corgi
+Type: model
+Mid: {C03429D7-277C-4483-9B56-7E28683E8F1B}
+Format: 3Ds Max 2018
+Export: FBX, OBJ, 3DS, MAT
+Render: Corona (10)
+Polys: 4736
+Verts: 4738
+Matclasses: _CoronaPhysicalMtl
+Units: Centimeters
+Dimension: 64.56 x 200.46 x 155.66
+Preset: FULL CUSTOM
+Date: 2024.12.6
+Preview: Yes
+Tags: 
+Packinfo: Packed with Model Packer by https://3dground.net/
+Packver: 2.0.0
+Description:
+
