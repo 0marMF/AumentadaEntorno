@@ -48,11 +48,37 @@ namespace Convai.Scripts.Runtime.Addons
         [SerializeField] [Tooltip("Speed of camera movement when running")]
         private float runBobSpeed = 14f;
 
+        [Header("Footstep Sounds")]
+        [SerializeField] [Tooltip("Sound played when walking")]
+        private AudioClip footstepSound;
+
+        [SerializeField] [Tooltip("Walking step interval")]
+        private float walkStepInterval = 0.5f;
+
+        [SerializeField] [Tooltip("Running step interval")]
+        private float runStepInterval = 0.3f;
+
+        [SerializeField] [Tooltip("Fade in duration for footsteps (seconds)")]
+        private float footstepFadeIn = 0.3f;
+
+        [SerializeField] [Tooltip("Fade out duration for footsteps (seconds)")]
+        private float footstepFadeOut = 0.2f;
+
+        [SerializeField] [Tooltip("Maximum volume for footsteps")] [Range(0, 1)]
+        private float footstepMaxVolume = 0.7f;
+
         private CharacterController _characterController;
         private Vector3 _moveDirection = Vector3.zero;
         private float _rotationX;
         private float _defaultCameraY;
         private float _bobTimer;
+        private AudioSource _audioSource;
+        private bool _isMoving;
+        private bool _wasMoving;
+        private float _currentFadeTime;
+        private float _targetVolume;
+        private float _fadeDuration;
+        private bool _isFading;
 
         // ✅ Singleton Instance
         public static ConvaiPlayerMovement Instance { get; private set; }
@@ -71,6 +97,21 @@ namespace Convai.Scripts.Runtime.Addons
                 if (playerCamera == null)
                     Debug.LogWarning("No camera assigned to ConvaiPlayerMovement and no child camera found.");
             }
+
+            _audioSource = GetComponent<AudioSource>();
+            if (_audioSource == null)
+            {
+                _audioSource = gameObject.AddComponent<AudioSource>();
+                _audioSource.spatialBlend = 1f;
+                _audioSource.playOnAwake = false;
+                _audioSource.loop = true;
+                _audioSource.volume = 0f;
+            }
+
+            if (footstepSound != null)
+            {
+                _audioSource.clip = footstepSound;
+            }
         }
 
         private void Start()
@@ -85,6 +126,102 @@ namespace Convai.Scripts.Runtime.Addons
             MovePlayer();
             RotatePlayerAndCamera();
             ApplyHeadBobbing();
+            UpdateMovementState();
+            HandleFootsteps();
+            UpdateFade();
+        }
+
+        private void UpdateFade()
+        {
+            if (_isFading)
+            {
+                _currentFadeTime += Time.deltaTime;
+                float progress = Mathf.Clamp01(_currentFadeTime / _fadeDuration);
+                _audioSource.volume = Mathf.Lerp(_audioSource.volume, _targetVolume, progress);
+
+                if (_currentFadeTime >= _fadeDuration)
+                {
+                    _isFading = false;
+                    
+                    // Si el fade out terminó y el volumen es 0, detener el sonido
+                    if (_targetVolume <= 0f)
+                    {
+                        _audioSource.Stop();
+                    }
+                }
+            }
+        }
+
+        private void UpdateMovementState()
+        {
+            _isMoving = _characterController.isGrounded && 
+                       ConvaiInputManager.Instance.moveVector.magnitude > 0.1f;
+        }
+
+        private void HandleFootsteps()
+        {
+            // Si acaba de empezar a moverse
+            if (_isMoving && !_wasMoving)
+            {
+                StartFootsteps();
+            }
+            // Si acaba de detenerse
+            else if (!_isMoving && _wasMoving)
+            {
+                StopFootsteps();
+            }
+
+            // Ajustamos el pitch según si está corriendo o caminando
+            if (_isMoving)
+            {
+                AdjustFootstepSpeed();
+            }
+
+            _wasMoving = _isMoving;
+        }
+
+        private void StartFootsteps()
+        {
+            if (_audioSource != null && footstepSound != null)
+            {
+                if (!_audioSource.isPlaying)
+                {
+                    _audioSource.Play();
+                    _audioSource.volume = 0f; // Empieza con volumen 0
+                }
+                
+                // Configurar fade in
+                _targetVolume = footstepMaxVolume;
+                _fadeDuration = footstepFadeIn;
+                _currentFadeTime = 0f;
+                _isFading = true;
+                
+                AdjustFootstepSpeed();
+            }
+        }
+
+        private void StopFootsteps()
+        {
+            if (_audioSource != null && _audioSource.isPlaying)
+            {
+                // Configurar fade out
+                _targetVolume = 0f;
+                _fadeDuration = footstepFadeOut;
+                _currentFadeTime = 0f;
+                _isFading = true;
+            }
+        }
+
+        private void AdjustFootstepSpeed()
+        {
+            if (ConvaiInputManager.Instance.isRunning)
+            {
+                _audioSource.pitch = walkStepInterval / runStepInterval;
+            }
+            else
+            {
+                _audioSource.pitch = 1f;
+            }
         }
 
         private void OnEnable()
@@ -144,7 +281,7 @@ namespace Convai.Scripts.Runtime.Addons
         {
             Vector2 input = ConvaiInputManager.Instance.moveVector;
 
-            if (_characterController.isGrounded && input.magnitude > 0.1f && playerCamera != null) // ✅ Usar input directamente
+            if (_characterController.isGrounded && input.magnitude > 0.1f && playerCamera != null)
             {
                 float bobAmount = ConvaiInputManager.Instance.isRunning ? runBobAmount : walkBobAmount;
                 float bobSpeed = ConvaiInputManager.Instance.isRunning ? runBobSpeed : walkBobSpeed;
