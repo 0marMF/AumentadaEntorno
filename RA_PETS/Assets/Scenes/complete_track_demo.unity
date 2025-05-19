@@ -2810,7 +2810,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8083741806043922179, guid: 24213578f04b3514ea031951db41de69, type: 3}
       propertyPath: characterID
-      value: e0c3677c-2de4-11f0-8336-42010a7be01f
+      value: 77831466-34b9-11f0-8bba-42010a7be01f
       objectReference: {fileID: 0}
     - target: {fileID: 8083741806043922179, guid: 24213578f04b3514ea031951db41de69, type: 3}
       propertyPath: characterName
