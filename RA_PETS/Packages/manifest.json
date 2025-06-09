@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.readyplayerme.core": "https://github.com/readyplayerme/rpm-unity-sdk-core.git#f6ea3c4b0a8891b7c4c1d7b269cee545185549fb",
     "com.soupday.cc3_unity_tools": "https://github.com/soupday/cc_unity_tools_URP.git",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ai.navigation": "2.0.6",
@@ -67,5 +68,15 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "scopedRegistries": [
+    {
+      "name": "Ready Player Me",
+      "url": "https://package.readyplayer.me",
+      "scopes": [
+        "com.readyplayerme"
+      ],
+      "overrideBuiltIns": false
+    }
+  ]
 }
